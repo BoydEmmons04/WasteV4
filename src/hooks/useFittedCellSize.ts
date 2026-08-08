@@ -1,10 +1,11 @@
 import { useLayoutEffect, useState } from 'react';
 import type { RefObject } from 'react';
 
-// Must match the .tally-grid gap/padding in index.css - single source of
-// truth for the pixel math below.
-const GRID_GAP = 60;
-const GRID_PADDING = 60;
+// Must match the .tally-grid gap/padding in index.css (including its
+// 700px breakpoint) - single source of truth for the pixel math below.
+function getGridSpacing(): number {
+  return window.innerWidth >= 700 ? 60 : 16;
+}
 
 // Measures the actual space available for one page of the grid and works
 // out the largest square cell that fits `columns` across AND `rows` down at
@@ -24,8 +25,9 @@ export function useFittedCellSize(containerRef: RefObject<HTMLElement | null>, c
       const width = el.clientWidth;
       const height = el.clientHeight;
       if (width === 0 || height === 0) return;
-      const availableWidth = width - 2 * GRID_PADDING - (columns - 1) * GRID_GAP;
-      const availableHeight = height - 2 * GRID_PADDING - (rows - 1) * GRID_GAP;
+      const spacing = getGridSpacing();
+      const availableWidth = width - 2 * spacing - (columns - 1) * spacing;
+      const availableHeight = height - 2 * spacing - (rows - 1) * spacing;
       const size = Math.floor(Math.min(availableWidth / columns, availableHeight / rows));
       setCellSize(size > 0 ? size : null);
     };

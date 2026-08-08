@@ -104,8 +104,12 @@ export default function ItemFormSheet({ opened, onClose, categories, items, defa
       // Closing the popup while a text input is still focused (mobile
       // keyboard still up) can leave the page mis-rendered until reload -
       // dismiss focus first so the popup closes from a settled layout.
+      // Deferring the actual close to the next frame gives that blur's own
+      // DOM work (F7's ListInput does some internal cleanup on blur) a
+      // clean tick to finish before the popup-close/grid-update commit
+      // starts, instead of both racing to touch the DOM in the same tick.
       (document.activeElement as HTMLElement | null)?.blur();
-      onClose();
+      requestAnimationFrame(() => onClose());
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not save item.');
     } finally {

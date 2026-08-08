@@ -37,7 +37,7 @@ export default function RadialMenu({ center, itemName, onSelect, onDelete, onEdi
             key={delta}
             type="button"
             className={`radial-segment ${delta > 0 ? 'radial-positive' : 'radial-negative'}`}
-            style={{ left: x, top: y }}
+            style={{ left: x, top: y, animationDelay: `${i * 18}ms` }}
             onClick={(e) => {
               e.stopPropagation();
               onSelect(delta);
@@ -50,7 +50,7 @@ export default function RadialMenu({ center, itemName, onSelect, onDelete, onEdi
       <button
         type="button"
         className="radial-action-btn radial-action-delete"
-        style={{ left: cx - 45, top: actionY }}
+        style={{ left: cx - 45, top: actionY, animationDelay: `${SEGMENTS.length * 18}ms` }}
         onClick={(e) => {
           e.stopPropagation();
           onDelete();
@@ -61,7 +61,7 @@ export default function RadialMenu({ center, itemName, onSelect, onDelete, onEdi
       <button
         type="button"
         className="radial-action-btn radial-action-edit"
-        style={{ left: cx + 45, top: actionY }}
+        style={{ left: cx + 45, top: actionY, animationDelay: `${(SEGMENTS.length + 1) * 18}ms` }}
         onClick={(e) => {
           e.stopPropagation();
           onEdit();

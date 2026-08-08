@@ -20,13 +20,16 @@ body {
    whether it holds 1 item or a full page of them. Buttons then fit inside
    their track via aspect-ratio + max-width/max-height rather than stretching
    to the track's width and letting aspect-ratio push their height past it;
-   that mismatch was what let the 4th row run under the bottom toolbar. */
+   that mismatch was what let the 4th row run under the bottom toolbar.
+   Gap/padding are intentionally smaller on phone (see useFittedCellSize.ts,
+   which mirrors these two values) - 60px on a ~375px-wide screen was eating
+   nearly half the width in whitespace, leaving buttons tiny. */
 .tally-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   grid-template-rows: repeat(4, 1fr);
-  gap: 60px;
-  padding: 60px;
+  gap: 16px;
+  padding: 16px;
   max-width: 960px;
   height: 100%;
   box-sizing: border-box;
@@ -38,6 +41,8 @@ body {
 @media (min-width: 700px) {
   .tally-grid {
     grid-template-columns: repeat(3, 1fr);
+    gap: 60px;
+    padding: 60px;
   }
 }
 
@@ -357,11 +362,32 @@ body {
   }
 }
 
+@keyframes radial-backdrop-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes radial-pop-in {
+  from {
+    transform: translate(-50%, -50%) scale(0.4);
+    opacity: 0;
+  }
+  to {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+}
+
 .radial-backdrop {
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.35);
   z-index: 9999;
+  animation: radial-backdrop-fade-in 0.15s ease-out;
 }
 
 .radial-center {
@@ -379,6 +405,7 @@ body {
   max-width: 160px;
   overflow: hidden;
   text-overflow: ellipsis;
+  animation: radial-pop-in 0.22s cubic-bezier(0.34, 1.56, 0.64, 1) backwards;
 }
 
 .radial-segment {
@@ -397,6 +424,7 @@ body {
   color: #fff;
   cursor: pointer;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  animation: radial-pop-in 0.22s cubic-bezier(0.34, 1.56, 0.64, 1) backwards;
 }
 
 .radial-positive {
@@ -421,6 +449,7 @@ body {
   color: #fff;
   cursor: pointer;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  animation: radial-pop-in 0.22s cubic-bezier(0.34, 1.56, 0.64, 1) backwards;
 }
 
 .radial-action-delete {

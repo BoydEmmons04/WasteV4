@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Popup, Page, Navbar, NavRight, Link, Block, BlockTitle, List, ListItem, Button, Preloader, f7 } from 'framework7-react';
 import { fetchTalliesInRange, todayDateString, dateStringDaysAgo } from '../lib/firestore';
 import { publishTemplate } from '../lib/templates';
@@ -19,20 +19,48 @@ export default function SummaryScreen({ opened, onClose, categories, items, toda
   const [selectedCategoryIds, setSelectedCategoryIds] = useState<Set<string>>(new Set());
   const [tallies, setTallies] = useState<DailyTally[]>([]);
   const [loading, setLoading] = useState(false);
+  const [fetchError, setFetchError] = useState('');
   const [endOfDayOpen, setEndOfDayOpen] = useState(false);
   const [publishing, setPublishing] = useState(false);
+  const requestIdRef = useRef(0);
 
   useEffect(() => {
     setSelectedCategoryIds(new Set(categories.map((c) => c.id)));
   }, [categories]);
 
+  // A flaky mobile connection can leave a plain getDocs() hanging far
+  // longer than feels like "loading" - race it against a timeout so the
+  // user gets an explicit error + retry instead of a spinner that never
+  // resolves. requestIdRef guards against a slow, now-superseded request
+  // (e.g. from a date range the user already changed away from) landing
+  // after a newer one and clobbering fresher data or flipping loading back
+  // on/off out of order.
+  const loadTallies = useCallback(() => {
+    const requestId = ++requestIdRef.current;
+    setLoading(true);
+    setFetchError('');
+    const timeout = new Promise<never>((_, reject) => {
+      setTimeout(() => reject(new Error('Taking longer than expected. Check your connection and try again.')), 12000);
+    });
+    Promise.race([fetchTalliesInRange(start, end), timeout])
+      .then((result) => {
+        if (requestIdRef.current !== requestId) return;
+        setTallies(result);
+      })
+      .catch((err) => {
+        if (requestIdRef.current !== requestId) return;
+        setFetchError(err instanceof Error ? err.message : 'Could not load summary data.');
+      })
+      .finally(() => {
+        if (requestIdRef.current !== requestId) return;
+        setLoading(false);
+      });
+  }, [start, end]);
+
   useEffect(() => {
     if (!opened) return;
-    setLoading(true);
-    fetchTalliesInRange(start, end)
-      .then(setTallies)
-      .finally(() => setLoading(false));
-  }, [opened, start, end]);
+    loadTallies();
+  }, [opened, loadTallies]);
 
   const itemById = useMemo(() => new Map(items.map((i) => [i.id, i])), [items]);
 
@@ -170,6 +198,13 @@ export default function SummaryScreen({ opened, onClose, categories, items, toda
         {loading ? (
           <Block className="text-align-center">
             <Preloader />
+          </Block>
+        ) : fetchError ? (
+          <Block className="text-align-center">
+            <p style={{ color: 'var(--f7-color-red)' }}>{fetchError}</p>
+            <Button small outline round onClick={loadTallies}>
+              Retry
+            </Button>
           </Block>
         ) : (
           <>
