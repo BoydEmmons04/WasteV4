@@ -1,0 +1,57 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // All app data lives here, scoped per account - a user can only ever
+    // read or write their own categories/items/tallies.
+    match /users/{userId}/{document=**} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Deprecated top-level collections from before per-account scoping.
+    // Kept temporarily so the one-time migration script can read/clean
+    // them up; the app itself no longer reads or writes here.
+    match /categories/{categoryId} {
+      allow read, write: if request.auth != null;
+    }
+    match /items/{itemId} {
+      allow read, write: if request.auth != null;
+    }
+    match /tallies/{tallyId} {
+      allow read, write: if request.auth != null;
+    }
+
+    // Maps a 5-digit store code to the email/uid it was registered with, so
+    // login can work from just the code with no password. Reads are
+    // unauthenticated (login happens before the client is signed in) but
+    // scoped to exact-code lookups only - list is denied so the whole
+    // directory can't be enumerated. Only the account that owns a code can
+    // create its mapping, and only once: Firestore classifies a write as
+    // "create" only when no document exists yet at that path, so a second
+    // attempt at an already-claimed code is naturally rejected.
+    match /storeCodes/{code} {
+      allow get: if true;
+      allow list: if false;
+      allow create: if request.auth != null && request.resource.data.uid == request.auth.uid;
+      allow update, delete: if false;
+    }
+
+    // A published, publicly-readable snapshot of one account's categories
+    // and items, copyable by other accounts at registration so they don't
+    // have to start empty. Only the owning account can publish/overwrite
+    // its own snapshot.
+    match /publishedTemplates/{uid} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.uid == uid;
+
+      match /categories/{categoryId} {
+        allow read: if true;
+        allow write: if request.auth != null && request.auth.uid == uid;
+      }
+      match /items/{itemId} {
+        allow read: if true;
+        allow write: if request.auth != null && request.auth.uid == uid;
+      }
+    }
+  }
+}

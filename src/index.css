@@ -1,0 +1,684 @@
+:root {
+  color-scheme: light dark;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  overscroll-behavior-y: none;
+}
+
+/* Rows are fixed at 4 for every breakpoint (see useGridLayout), so the grid
+   is given the page's full available height up front and divides it into
+   exactly 4 row tracks - the same height budget a full page always gets,
+   whether it holds 1 item or a full page of them. Buttons then fit inside
+   their track via aspect-ratio + max-width/max-height rather than stretching
+   to the track's width and letting aspect-ratio push their height past it;
+   that mismatch was what let the 4th row run under the bottom toolbar. */
+.tally-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(4, 1fr);
+  gap: 60px;
+  padding: 60px;
+  max-width: 960px;
+  height: 100%;
+  box-sizing: border-box;
+  margin: 0 auto;
+  justify-content: center;
+  align-content: center;
+}
+
+@media (min-width: 700px) {
+  .tally-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (min-width: 1100px) {
+  .tally-grid {
+    grid-template-columns: repeat(5, 1fr);
+    max-width: 1400px;
+  }
+}
+
+.tally-pager {
+  position: relative;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.tally-pager-scroll {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  flex: 1;
+  min-height: 0;
+}
+
+.tally-pager-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.tally-pager-page {
+  flex: 0 0 100%;
+  min-width: 0;
+  scroll-snap-align: start;
+  height: 100%;
+}
+
+.tally-pager-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  color: #111;
+  cursor: pointer;
+}
+
+.tally-pager-arrow:disabled {
+  opacity: 0.25;
+  pointer-events: none;
+}
+
+.tally-pager-arrow-left {
+  left: 8px;
+}
+
+.tally-pager-arrow-right {
+  right: 8px;
+}
+
+.tally-button {
+  position: relative;
+  display: block;
+  box-sizing: border-box;
+  aspect-ratio: 1;
+  width: 100%;
+  padding: 0;
+  background: var(--f7-page-bg-color, #fff);
+  border: none;
+  border-bottom: 10px solid transparent;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+  overflow: hidden;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  touch-action: manipulation;
+  user-select: none;
+}
+
+.tally-button:active {
+  transform: scale(0.96);
+}
+
+.tally-badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 1;
+  box-sizing: border-box;
+  min-width: 36px;
+  width: max-content;
+  height: 36px;
+  padding: 0 11px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 700;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+}
+
+.tally-button-image {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: rgba(127, 127, 127, 0.12);
+}
+
+.tally-button-image::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: rgba(255, 255, 255, 0.5);
+  pointer-events: none;
+}
+
+.tally-button-image img {
+  position: relative;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  /* Images are natively draggable in most browsers; a mouse drag starting
+     on one hijacks the gesture into the browser's own "drag this image"
+     flow (a pointercancel, taking it away from our swipe-down tracking)
+     instead of reaching our pointer handlers. draggable={false} on the
+     element covers Chrome/Firefox; Safari needs this too. */
+  -webkit-user-drag: none;
+  user-drag: none;
+  -webkit-touch-callout: none;
+}
+
+.tally-button-title {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 2;
+  padding: 24px 8px 8px;
+  background: linear-gradient(to top, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0));
+  color: #111;
+  text-align: center;
+}
+
+.tally-button-name {
+  font-size: 16px;
+  font-weight: 700;
+  color: black;
+}
+
+.tally-button-price {
+  font-size: 14px;
+  font-weight: 700;
+  opacity: 0.85;
+}
+
+.category-chip {
+  flex: none;
+  width: auto;
+  padding: 6px 14px;
+  border: none;
+  border-radius: 16px;
+  background: var(--f7-page-bg-color, #fff);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  color: var(--f7-toolbar-link-color, #666);
+  font: inherit;
+  font-weight: 600;
+  font-size: 14px;
+  white-space: nowrap;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  touch-action: manipulation;
+  user-select: none;
+}
+
+.category-chip-active {
+  color: var(--f7-theme-color, #007aff);
+}
+
+/* Bottom category bar: the individual chips merge into one shadowed cell,
+   so the chips themselves go flat/transparent inside it - only the outer
+   cell carries the card shadow. The "+" stays its own separate button
+   outside this cell so it can never scroll out of view. */
+.category-bar-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.category-bar-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+  background: var(--f7-page-bg-color, #fff);
+  border-radius: 999px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  padding: 4px 6px;
+}
+
+.category-bar-cell::-webkit-scrollbar {
+  display: none;
+}
+
+.category-bar-cell .category-chip {
+  background: transparent;
+  box-shadow: none;
+  border-radius: 999px;
+}
+
+.category-bar-cell .category-chip-active {
+  background: rgba(0, 122, 255, 0.14);
+  border-radius: 999px;
+}
+
+.category-chip-add {
+  flex: none;
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: var(--f7-page-bg-color, #fff);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  color: var(--f7-toolbar-link-color, #666);
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* The navbar's icon links (reorder/summary) are Framework7 icon glyphs,
+   which already read as bold shapes; this "+" is plain text and needs the
+   weight bumped to match them visually. */
+.add-item-link {
+  font-weight: 700;
+}
+
+/* Tablet/PC only - phone already reads fine at the default sizes. Must come
+   after the base .category-bar-cell/.category-chip/.category-chip-add
+   rules above: equal-specificity CSS resolves ties by source order, so a
+   media-query override placed earlier in the file loses to a later
+   unconditional rule even when its condition matches. */
+@media (min-width: 700px) {
+  .toolbar {
+    --f7-toolbar-height: 84px;
+  }
+
+  .sign-out-link {
+    font-size: 20px;
+  }
+
+  .category-bar-cell {
+    padding: 8px 12px;
+  }
+
+  .category-bar-cell .category-chip {
+    padding: 10px 22px;
+    font-size: 17px;
+  }
+
+  .category-chip-add {
+    width: 48px;
+    height: 48px;
+    min-width: 48px;
+    font-size: 24px;
+  }
+}
+
+@media (min-width: 1100px) {
+  .toolbar {
+    --f7-toolbar-height: 100px;
+  }
+
+  .sign-out-link {
+    font-size: 24px;
+  }
+
+  .category-bar-cell {
+    padding: 10px 16px;
+  }
+
+  .category-bar-cell .category-chip {
+    padding: 12px 28px;
+    font-size: 19px;
+  }
+
+  .category-chip-add {
+    width: 56px;
+    height: 56px;
+    min-width: 56px;
+    font-size: 28px;
+  }
+}
+
+.radial-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  z-index: 9999;
+}
+
+.radial-center {
+  position: fixed;
+  transform: translate(-50%, -50%);
+  background: rgba(255, 255, 255, 0.95);
+  color: #111;
+  padding: 10px 16px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 13px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+  pointer-events: none;
+  white-space: nowrap;
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.radial-segment {
+  position: fixed;
+  transform: translate(-50%, -50%);
+  width: 68px;
+  height: 68px;
+  border: none;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font: inherit;
+  font-weight: 700;
+  font-size: 16px;
+  color: #fff;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+.radial-positive {
+  background: #34c759;
+}
+
+.radial-negative {
+  background: #ff3b30;
+}
+
+.radial-action-btn {
+  position: fixed;
+  transform: translate(-50%, -50%);
+  width: 56px;
+  height: 56px;
+  border: none;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  color: #fff;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+.radial-action-delete {
+  background: #8e8e93;
+}
+
+.radial-action-edit {
+  background: #5856d6;
+}
+
+.add-item-image-picker {
+  width: 140px;
+  height: 140px;
+  margin: 0 auto;
+  border-radius: 16px;
+  overflow: hidden;
+  background: rgba(127, 127, 127, 0.15);
+  border: 2px dashed rgba(127, 127, 127, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--f7-toolbar-link-color, #666);
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.add-item-image-picker img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.add-item-picker-row {
+  margin: 0 16px 8px;
+}
+
+.add-item-color-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.add-item-swatch {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 3px solid transparent;
+  cursor: pointer;
+}
+
+.add-item-swatch-custom {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(127, 127, 127, 0.15);
+  color: var(--f7-toolbar-link-color, #666);
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1;
+  overflow: hidden;
+}
+
+.add-item-swatch-custom input[type='color'] {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: none;
+  padding: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.add-item-swatch-active {
+  border-color: var(--f7-theme-color, #007aff);
+}
+
+.summary-date-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.summary-date-row input[type='date'] {
+  flex: 1;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(127, 127, 127, 0.35);
+  background: var(--f7-page-bg-color, #fff);
+  color: inherit;
+  font: inherit;
+}
+
+.summary-preset-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.summary-category-row {
+  margin: 0 16px 8px;
+}
+
+.summary-totals-card {
+  display: flex;
+  justify-content: space-around;
+  text-align: center;
+  padding: 20px 0;
+}
+
+.summary-total-value {
+  font-size: 28px;
+  font-weight: 700;
+}
+
+.summary-total-label {
+  font-size: 13px;
+  color: var(--f7-toolbar-link-color, #666);
+  margin-top: 2px;
+}
+
+.summary-item-thumb {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+.end-of-day-total {
+  text-align: center;
+  padding: 24px 0 8px;
+}
+
+.end-of-day-total-value {
+  font-size: 44px;
+  font-weight: 700;
+}
+
+.end-of-day-total-label {
+  font-size: 14px;
+  color: var(--f7-toolbar-link-color, #666);
+  margin-top: 4px;
+}
+
+.template-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  margin-bottom: 10px;
+  background: var(--f7-page-bg-color, #fff);
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+}
+
+.template-card-label {
+  font-weight: 700;
+  font-size: 15px;
+}
+
+.template-card-meta {
+  font-size: 13px;
+  color: var(--f7-toolbar-link-color, #666);
+  margin-top: 2px;
+}
+
+/* On wide screens the fullscreen popups would otherwise stretch their
+   forms/lists edge to edge, which reads poorly - cap and center content. */
+@media (min-width: 700px) {
+  .popup .page-content > .list,
+  .popup .page-content > .block,
+  .popup .page-content > .block-title {
+    max-width: 640px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+
+/* Grid reorder ("jiggle") mode: pages sit side by side (same shape as the
+   normal browsing pager) instead of one long wrapping grid, separated by a
+   faint divider at each seam. Each cell is a plain grid item that the FLIP
+   effect translates on reorder; the jiggle rotation lives on the inner
+   .tally-button so it never fights with that translate on the same
+   transform property. */
+.reorder-pages-scroll {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  height: 100%;
+}
+
+.reorder-pages-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.reorder-page {
+  flex: 0 0 100%;
+  min-width: 0;
+  position: relative;
+  scroll-snap-align: start;
+  height: 100%;
+}
+
+.reorder-page:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  top: 24px;
+  bottom: 24px;
+  right: 0;
+  width: 1px;
+  background: rgba(127, 127, 127, 0.3);
+}
+
+.reorder-cell {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+@keyframes tally-jiggle {
+  0% {
+    transform: rotate(-1.5deg);
+  }
+  50% {
+    transform: rotate(1.5deg);
+  }
+  100% {
+    transform: rotate(-1.5deg);
+  }
+}
+
+.reorder-jiggle {
+  animation: tally-jiggle 0.22s ease-in-out infinite;
+  cursor: grab;
+}
+
+.reorder-jiggle-alt {
+  animation-delay: -0.11s;
+}
+
+.reorder-cell-lifted {
+  opacity: 0.35;
+}
+
+.reorder-overlay {
+  position: fixed;
+  z-index: 10000;
+  pointer-events: none;
+  transform: scale(1.06);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.35);
+}
