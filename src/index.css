@@ -326,6 +326,16 @@ body {
   font-weight: 700;
 }
 
+/* Kept visually apart from the reorder/summary/add-item cluster (its own
+   left border + gap) since it isn't part of that action group - it's a
+   standing reference, not something you'd reach for in the same breath as
+   adding an item or opening reports. */
+.info-link {
+  margin-left: 14px;
+  padding-left: 14px;
+  border-left: 1px solid rgba(127, 127, 127, 0.3);
+}
+
 /* Tablet/PC only - phone already reads fine at the default sizes. Must come
    after the base .category-bar-cell/.category-chip/.category-chip-add
    rules above: equal-specificity CSS resolves ties by source order, so a
@@ -336,7 +346,8 @@ body {
     --f7-toolbar-height: 84px;
   }
 
-  .sign-out-link {
+  .sign-out-link,
+  .info-link {
     font-size: 20px;
   }
 
@@ -362,7 +373,8 @@ body {
     --f7-toolbar-height: 100px;
   }
 
-  .sign-out-link {
+  .sign-out-link,
+  .info-link {
     font-size: 24px;
   }
 

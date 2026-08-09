@@ -92,6 +92,15 @@ export default function MainScreen() {
     });
   };
 
+  const handleGestureHelp = () => {
+    f7.dialog.alert(
+      '<b>Tap</b> an item to add 1 to its tally.<br><br>' +
+        '<b>Swipe down</b> on an item to remove 1.<br><br>' +
+        '<b>Press and hold</b> an item to open the menu for custom amounts, editing, or deleting it.',
+      'Gestures',
+    );
+  };
+
   const handleReorderToggle = async () => {
     if (savingOrder) return;
     if (!reorderMode) {
@@ -130,6 +139,9 @@ export default function MainScreen() {
               </Link>
             </>
           )}
+          <Link onClick={handleGestureHelp} className="info-link">
+            <Icon f7="info_circle" />
+          </Link>
         </NavRight>
       </Navbar>
 
