@@ -6,11 +6,11 @@ import {
   subscribeCategories,
   subscribeItems,
   subscribeTalliesForDate,
-  todayDateString,
   adjustTally,
   archiveItem,
   reorderItems,
 } from '../lib/firestore';
+import { useTodayDateString } from '../hooks/useTodayDateString';
 import type { Category, Item, DailyTally } from '../types';
 import CategoryBar from '../components/CategoryBar';
 import TallyGridPager from '../components/TallyGridPager';
@@ -36,17 +36,25 @@ export default function MainScreen() {
   const [reorderMode, setReorderMode] = useState(false);
   const [savingOrder, setSavingOrder] = useState(false);
   const pendingOrderRef = useRef<string[]>([]);
+  const today = useTodayDateString();
 
   useEffect(() => {
     const unsubCategories = subscribeCategories(setCategories);
     const unsubItems = subscribeItems(setItems);
-    const unsubTallies = subscribeTalliesForDate(todayDateString(), setTallies);
     return () => {
       unsubCategories();
       unsubItems();
-      unsubTallies();
     };
   }, []);
+
+  // Re-subscribes whenever the calendar day rolls over (see
+  // useTodayDateString) so a tablet left open overnight starts showing the
+  // new day's - empty - tallies instead of yesterday's counts frozen in
+  // place.
+  useEffect(() => {
+    const unsubTallies = subscribeTalliesForDate(today, setTallies);
+    return () => unsubTallies();
+  }, [today]);
 
   useEffect(() => {
     if (!selectedCategoryId && categories.length > 0) {
