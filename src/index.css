@@ -14,6 +14,27 @@ body {
   overscroll-behavior-y: none;
 }
 
+/* Phone/tablet only (touch, no real hover/pointer) - this is a kiosk-style
+   POS screen where a long-press is meant to open the radial menu, not start
+   a text selection, and accidental selection highlighting during rapid
+   tapping reads as a bug. Desktop mouse/trackpad users keep normal
+   selection (e.g. to copy summary numbers). Inputs/textareas stay
+   selectable so typing still works normally. */
+@media (hover: none) and (pointer: coarse) {
+  * {
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+  }
+
+  input,
+  textarea,
+  [contenteditable] {
+    -webkit-user-select: text;
+    user-select: text;
+  }
+}
+
 /* Rows are fixed at 4 for every breakpoint (see useGridLayout), so the grid
    is given the page's full available height up front and divides it into
    exactly 4 row tracks - the same height budget a full page always gets,
@@ -710,4 +731,200 @@ body {
   pointer-events: none;
   transform: scale(1.06);
   box-shadow: 0 12px 28px rgba(0, 0, 0, 0.35);
+}
+
+/* Auth screens (Login/Register): a centered card that works the same way
+   at every aspect ratio - phone/tablet, portrait/landscape, desktop - by
+   just staying centered in a scrollable flex column rather than trying to
+   reflow into columns/grids like the tally screens do. min-height uses
+   100dvh so a landscape phone's shrunk viewport (address bar, keyboard)
+   doesn't clip the card; overflow-y:auto lets it scroll instead. */
+.auth-page {
+  --auth-accent: var(--f7-theme-color, #007aff);
+  min-height: 100vh;
+  min-height: 100dvh;
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow-y: auto;
+  padding: max(24px, env(safe-area-inset-top)) max(20px, env(safe-area-inset-right)) max(24px, env(safe-area-inset-bottom))
+    max(20px, env(safe-area-inset-left));
+  background:
+    radial-gradient(circle at 50% 0%, color-mix(in srgb, var(--auth-accent) 12%, transparent), transparent 55%),
+    var(--f7-page-bg-color, #fff);
+}
+
+.auth-shell {
+  width: 100%;
+  max-width: 400px;
+  margin: auto;
+}
+
+.auth-card {
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--f7-block-strong-bg-color, #fff);
+  border-radius: 22px;
+  padding: 36px 28px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06), 0 16px 40px rgba(0, 0, 0, 0.12);
+}
+
+.auth-brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  margin-bottom: 28px;
+}
+
+.auth-logo {
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  background: var(--auth-accent);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  box-shadow: 0 6px 16px color-mix(in srgb, var(--auth-accent) 45%, transparent);
+  margin-bottom: 14px;
+}
+
+.auth-brand-name {
+  font-size: 21px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.auth-heading {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.auth-heading h1 {
+  margin: 0 0 6px;
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.auth-heading p {
+  margin: 0;
+  font-size: 14px;
+  color: var(--f7-toolbar-link-color, #666);
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.auth-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.auth-field label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--f7-toolbar-link-color, #666);
+  padding: 0 2px;
+}
+
+.auth-field input {
+  box-sizing: border-box;
+  width: 100%;
+  font: inherit;
+  font-size: 16px;
+  color: inherit;
+  background: var(--f7-page-bg-color, #fff);
+  border: 1.5px solid rgba(127, 127, 127, 0.25);
+  border-radius: 12px;
+  padding: 13px 14px;
+  transition: border-color 0.15s ease;
+}
+
+.auth-field input:focus {
+  outline: none;
+  border-color: var(--auth-accent);
+}
+
+.auth-field-code-row {
+  display: flex;
+  gap: 12px;
+}
+
+.auth-field-code-row .auth-field {
+  flex: 1;
+  min-width: 0;
+}
+
+.auth-hint {
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--f7-toolbar-link-color, #666);
+  padding: 0 2px;
+}
+
+.auth-error {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--f7-color-red, #ff3b30);
+  text-align: center;
+  padding: 2px;
+}
+
+.auth-submit {
+  width: 100%;
+  box-sizing: border-box;
+  border: none;
+  border-radius: 12px;
+  padding: 14px;
+  background: var(--auth-accent);
+  color: #fff;
+  font: inherit;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  transition: opacity 0.15s ease, transform 0.1s ease;
+}
+
+.auth-submit:active {
+  transform: scale(0.98);
+}
+
+.auth-submit:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.auth-switch {
+  text-align: center;
+  margin-top: 22px;
+  font-size: 14px;
+  color: var(--f7-toolbar-link-color, #666);
+}
+
+.auth-switch a {
+  color: var(--auth-accent);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+@media (min-width: 700px) {
+  .auth-shell {
+    max-width: 440px;
+  }
+
+  .auth-card {
+    padding: 44px 36px;
+  }
 }

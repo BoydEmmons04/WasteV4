@@ -8,7 +8,7 @@ import TemplatePickerPage from './pages/TemplatePickerPage';
 import MainScreen from './pages/MainScreen';
 
 const f7params = {
-  name: 'WasteAgain',
+  name: 'CFA Waste',
   theme: 'ios' as const,
   navbar: {
     iosCenterTitle: false,

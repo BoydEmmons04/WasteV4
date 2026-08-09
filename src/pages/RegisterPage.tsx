@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { Page, Navbar, List, ListInput, Button, Block, BlockTitle, Preloader, Link } from 'framework7-react';
+import { Page, Preloader } from 'framework7-react';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../firebase';
 import { claimStoreCode, codeToAuthPassword, isStoreCodeTaken } from '../lib/storeAuth';
+import TrashUpIcon from '../components/TrashUpIcon';
 
 interface RegisterPageProps {
   onSwitchToLogin: () => void;
@@ -51,56 +52,90 @@ export default function RegisterPage({ onSwitchToLogin, onRegistered }: Register
     }
   };
 
+  const canSubmit = !loading && !!email && CODE_PATTERN.test(code) && CODE_PATTERN.test(confirmCode);
+
   return (
-    <Page>
-      <Navbar title="Sign Up" />
-      <BlockTitle large className="text-align-center margin-top-large">
-        WasteAgain
-      </BlockTitle>
-      <List form strongIos outlineIos dividersIos insetIos>
-        <ListInput
-          label="Email"
-          type="email"
-          placeholder="you@example.com"
-          value={email}
-          onInput={(e) => setEmail(e.target.value)}
-          autocomplete="email"
-        />
-        <ListInput
-          label="Store Code"
-          type="text"
-          inputmode="numeric"
-          placeholder="5 digits"
-          maxlength={5}
-          value={code}
-          onInput={(e) => setCode(digitsOnly(e.target.value))}
-        />
-        <ListInput
-          label="Confirm Store Code"
-          type="text"
-          inputmode="numeric"
-          placeholder="5 digits"
-          maxlength={5}
-          value={confirmCode}
-          onInput={(e) => setConfirmCode(digitsOnly(e.target.value))}
-        />
-      </List>
-      <Block className="text-align-center" style={{ fontSize: 13, opacity: 0.7 }}>
-        Your store code is what you'll use to log in later, in place of a password - keep it somewhere you'll remember.
-      </Block>
-      {error && (
-        <Block className="text-align-center" style={{ color: 'var(--f7-color-red)' }}>
-          {error}
-        </Block>
-      )}
-      <Block>
-        <Button large fill round disabled={loading || !email || !code || !confirmCode} onClick={handleRegister}>
-          {loading ? <Preloader color="white" /> : 'Create Account'}
-        </Button>
-      </Block>
-      <Block className="text-align-center">
-        <Link onClick={onSwitchToLogin}>Already have an account? Log In</Link>
-      </Block>
+    <Page className="auth-page">
+      <div className="auth-shell">
+        <div className="auth-card">
+          <div className="auth-brand">
+            <div className="auth-logo">
+              <TrashUpIcon size={28} />
+            </div>
+            <div className="auth-brand-name">CFA Waste</div>
+          </div>
+
+          <div className="auth-heading">
+            <h1>Create your store</h1>
+            <p>Set up a store code to get started</p>
+          </div>
+
+          <form
+            className="auth-form"
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleRegister();
+            }}
+          >
+            <div className="auth-field">
+              <label htmlFor="register-email">Email</label>
+              <input
+                id="register-email"
+                type="email"
+                placeholder="you@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                autoComplete="email"
+                autoFocus
+              />
+            </div>
+
+            <div className="auth-field-code-row">
+              <div className="auth-field">
+                <label htmlFor="register-code">Store Code</label>
+                <input
+                  id="register-code"
+                  type="text"
+                  inputMode="numeric"
+                  placeholder="5 digits"
+                  maxLength={5}
+                  value={code}
+                  onChange={(e) => setCode(digitsOnly(e.target.value))}
+                  autoComplete="off"
+                />
+              </div>
+
+              <div className="auth-field">
+                <label htmlFor="register-confirm-code">Confirm Code</label>
+                <input
+                  id="register-confirm-code"
+                  type="text"
+                  inputMode="numeric"
+                  placeholder="5 digits"
+                  maxLength={5}
+                  value={confirmCode}
+                  onChange={(e) => setConfirmCode(digitsOnly(e.target.value))}
+                  autoComplete="off"
+                />
+              </div>
+            </div>
+
+            <p className="auth-hint">
+              Your store code is what you'll use to log in later, in place of a password - keep it somewhere you'll remember.
+            </p>
+
+            {error && <div className="auth-error">{error}</div>}
+
+            <button type="submit" className="auth-submit" disabled={!canSubmit}>
+              {loading ? <Preloader color="white" /> : 'Create Account'}
+            </button>
+          </form>
+
+          <div className="auth-switch">
+            Already have an account? <a onClick={onSwitchToLogin}>Log In</a>
+          </div>
+        </div>
+      </div>
     </Page>
   );
 }

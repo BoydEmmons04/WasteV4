@@ -129,10 +129,6 @@ export default function MainScreen() {
         <Block className="text-align-center">
           <p>No categories yet.</p>
         </Block>
-      ) : visibleItems.length === 0 ? (
-        <Block className="text-align-center">
-          <p>No items in this category yet.</p>
-        </Block>
       ) : reorderMode ? (
         <TallyGridReorder
           key={selectedCategoryId}

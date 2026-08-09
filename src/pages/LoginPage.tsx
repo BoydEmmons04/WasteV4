@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { Page, Navbar, List, ListInput, Button, Block, BlockTitle, Preloader, Link } from 'framework7-react';
+import { Page, Preloader } from 'framework7-react';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../firebase';
 import { codeToAuthPassword, lookupEmailByStoreCode } from '../lib/storeAuth';
+import TrashUpIcon from '../components/TrashUpIcon';
 
 interface LoginPageProps {
   onSwitchToRegister: () => void;
@@ -39,36 +40,55 @@ export default function LoginPage({ onSwitchToRegister }: LoginPageProps) {
   };
 
   return (
-    <Page>
-      <Navbar title="Log In" />
-      <BlockTitle large className="text-align-center margin-top-large">
-        WasteAgain
-      </BlockTitle>
-      <List form strongIos outlineIos dividersIos insetIos>
-        <ListInput
-          label="Store Code"
-          type="text"
-          inputmode="numeric"
-          placeholder="5 digits"
-          maxlength={5}
-          value={code}
-          onInput={(e) => setCode(digitsOnly(e.target.value))}
-          autocomplete="off"
-        />
-      </List>
-      {error && (
-        <Block className="text-align-center" style={{ color: 'var(--f7-color-red)' }}>
-          {error}
-        </Block>
-      )}
-      <Block>
-        <Button large fill round disabled={loading || !CODE_PATTERN.test(code)} onClick={handleLogin}>
-          {loading ? <Preloader color="white" /> : 'Log In'}
-        </Button>
-      </Block>
-      <Block className="text-align-center">
-        <Link onClick={onSwitchToRegister}>Don't have an account? Sign Up</Link>
-      </Block>
+    <Page className="auth-page">
+      <div className="auth-shell">
+        <div className="auth-card">
+          <div className="auth-brand">
+            <div className="auth-logo">
+              <TrashUpIcon size={28} />
+            </div>
+            <div className="auth-brand-name">CFA Waste</div>
+          </div>
+
+          <div className="auth-heading">
+            <h1>Welcome back</h1>
+            <p>Enter your store code to sign in</p>
+          </div>
+
+          <form
+            className="auth-form"
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleLogin();
+            }}
+          >
+            <div className="auth-field">
+              <label htmlFor="login-code">Store Code</label>
+              <input
+                id="login-code"
+                type="text"
+                inputMode="numeric"
+                placeholder="5 digits"
+                maxLength={5}
+                value={code}
+                onChange={(e) => setCode(digitsOnly(e.target.value))}
+                autoComplete="off"
+                autoFocus
+              />
+            </div>
+
+            {error && <div className="auth-error">{error}</div>}
+
+            <button type="submit" className="auth-submit" disabled={loading || !CODE_PATTERN.test(code)}>
+              {loading ? <Preloader color="white" /> : 'Log In'}
+            </button>
+          </form>
+
+          <div className="auth-switch">
+            Don't have an account? <a onClick={onSwitchToRegister}>Sign Up</a>
+          </div>
+        </div>
+      </div>
     </Page>
   );
 }

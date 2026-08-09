@@ -77,6 +77,11 @@ export default function TallyGridPager({ items, tallyByItemId, onTap, onLongPres
                   onSwipeDown={() => onSwipeDown(item)}
                 />
               ))}
+              {pageItems.length === 0 && (
+                <div className="text-align-center" style={{ gridColumn: '1 / -1', padding: 24 }}>
+                  <p>No items in this category yet.</p>
+                </div>
+              )}
             </div>
           </div>
         ))}

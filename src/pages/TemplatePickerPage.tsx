@@ -36,7 +36,7 @@ export default function TemplatePickerPage({ onDone }: TemplatePickerPageProps) 
     <Page>
       <Navbar title="Start Your Store" />
       <BlockTitle large className="text-align-center margin-top-large">
-        Welcome to WasteAgain
+        Welcome to CFA Waste
       </BlockTitle>
       <Block className="text-align-center">
         <p>Copy items and categories from another store to get started faster, or start with a blank slate.</p>
