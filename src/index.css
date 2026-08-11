@@ -74,6 +74,35 @@ body {
   }
 }
 
+/* Wraps the store-code banner + grid/empty-state area so the grid (which
+   sizes itself to height:100% of its immediate parent) fills exactly the
+   space left over after the banner, rather than the banner just eating into
+   the grid's claimed 100% and pushing it down behind the bottom toolbar. */
+.main-content-area {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.main-grid-area {
+  flex: 1;
+  min-height: 0;
+}
+
+.store-code-banner {
+  flex: none;
+  text-align: center;
+  padding: 6px 12px;
+  font-size: 12.5px;
+  color: var(--f7-toolbar-link-color, #666);
+}
+
+.store-code-banner span {
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--f7-theme-color, #007aff);
+}
+
 .tally-pager {
   position: relative;
   height: 100%;

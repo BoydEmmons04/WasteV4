@@ -38,7 +38,11 @@ service cloud.firestore {
     // login can work from just the code with no password. Reads are
     // unauthenticated (login happens before the client is signed in) but
     // scoped to exact-code lookups only - list is denied to everyone except
-    // the admin, so the whole directory can't be enumerated by a regular
+    // the admin and a signed-in account querying for its own code (used to
+    // show a store its own code in the main view - the query itself must
+    // filter by uid, since Firestore evaluates this per matched document
+    // and would reject an unfiltered scan the moment it hit someone else's
+    // doc), so the whole directory still can't be enumerated by a regular
     // account. Only the account that owns a code can create its own
     // mapping (and only once - Firestore classifies a write as "create"
     // only when no document exists yet at that path, so a second attempt at
@@ -47,7 +51,7 @@ service cloud.firestore {
     // resetting a store's code or its email on file.
     match /storeCodes/{code} {
       allow get: if true;
-      allow list: if isAdmin();
+      allow list: if isAdmin() || (request.auth != null && request.auth.uid == resource.data.uid);
       allow create: if request.auth != null && (request.resource.data.uid == request.auth.uid || isAdmin());
       allow update, delete: if isAdmin();
     }

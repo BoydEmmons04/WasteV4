@@ -6,6 +6,7 @@ import {
   subscribeCategories,
   subscribeItems,
   subscribeTalliesForDate,
+  fetchOwnStoreCode,
   adjustTally,
   archiveItem,
   reorderItems,
@@ -45,6 +46,7 @@ export default function MainScreen({ onExitImpersonation }: MainScreenProps) {
   const [savingOrder, setSavingOrder] = useState(false);
   const pendingOrderRef = useRef<string[]>([]);
   const today = useTodayDateString();
+  const [storeCode, setStoreCode] = useState<string | null>(null);
 
   useEffect(() => {
     const unsubCategories = subscribeCategories(setCategories);
@@ -53,6 +55,15 @@ export default function MainScreen({ onExitImpersonation }: MainScreenProps) {
       unsubCategories();
       unsubItems();
     };
+  }, []);
+
+  // One-time lookup, not a live subscription - a store's own code practically
+  // never changes on its own (only an admin reset moves it), so this doesn't
+  // need to track updates the way categories/items/tallies do.
+  useEffect(() => {
+    fetchOwnStoreCode()
+      .then(setStoreCode)
+      .catch(() => setStoreCode(null));
   }, []);
 
   // Re-subscribes whenever the calendar day rolls over (see
@@ -160,29 +171,39 @@ export default function MainScreen({ onExitImpersonation }: MainScreenProps) {
         </NavRight>
       </Navbar>
 
-      {categories.length === 0 ? (
-        <Block className="text-align-center">
-          <p>No categories yet.</p>
-        </Block>
-      ) : reorderMode ? (
-        <TallyGridReorder
-          key={selectedCategoryId}
-          items={visibleItems}
-          tallyByItemId={tallyByItemId}
-          onOrderChange={(ids) => {
-            pendingOrderRef.current = ids;
-          }}
-        />
-      ) : (
-        <TallyGridPager
-          key={selectedCategoryId}
-          items={visibleItems}
-          tallyByItemId={tallyByItemId}
-          onTap={(item) => adjustTally(item.id, item.categoryId, 1, tallyByItemId[item.id] ?? 0)}
-          onLongPress={(item, center) => setRadial({ item, center })}
-          onSwipeDown={(item) => adjustTally(item.id, item.categoryId, -1, tallyByItemId[item.id] ?? 0)}
-        />
-      )}
+      <div className="main-content-area">
+        {storeCode && (
+          <div className="store-code-banner">
+            Store Code <span>{storeCode}</span>
+          </div>
+        )}
+
+        <div className="main-grid-area">
+          {categories.length === 0 ? (
+            <Block className="text-align-center">
+              <p>No categories yet.</p>
+            </Block>
+          ) : reorderMode ? (
+            <TallyGridReorder
+              key={selectedCategoryId}
+              items={visibleItems}
+              tallyByItemId={tallyByItemId}
+              onOrderChange={(ids) => {
+                pendingOrderRef.current = ids;
+              }}
+            />
+          ) : (
+            <TallyGridPager
+              key={selectedCategoryId}
+              items={visibleItems}
+              tallyByItemId={tallyByItemId}
+              onTap={(item) => adjustTally(item.id, item.categoryId, 1, tallyByItemId[item.id] ?? 0)}
+              onLongPress={(item, center) => setRadial({ item, center })}
+              onSwipeDown={(item) => adjustTally(item.id, item.categoryId, -1, tallyByItemId[item.id] ?? 0)}
+            />
+          )}
+        </div>
+      </div>
 
       <Toolbar bottom>
         <CategoryBar categories={categories} selectedId={selectedCategoryId} onSelect={setSelectedCategoryId} />

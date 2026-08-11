@@ -97,6 +97,17 @@ export async function fetchTalliesInRange(startDate: string, endDate: string): P
   return snapshot.docs.map((d) => ({ id: d.id, ...d.data() }) as DailyTally);
 }
 
+// storeCodes only maps code -> uid, not the reverse, so showing a store its
+// own code means querying by uid instead. Uses requireUid() like everything
+// else here, so while the admin is viewing a store this correctly resolves
+// to that store's code rather than looking for one belonging to the admin
+// account itself (which has none).
+export async function fetchOwnStoreCode(): Promise<string | null> {
+  const q = query(collection(db, 'storeCodes'), where('uid', '==', requireUid()));
+  const snapshot = await getDocs(q);
+  return snapshot.empty ? null : snapshot.docs[0].id;
+}
+
 export async function addCategory(name: string) {
   await addDoc(categoriesCollection(), {
     name,
