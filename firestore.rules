@@ -2,10 +2,23 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
+    // Single fixed admin account, identified by its (verified, signed)
+    // auth token email - keep this in sync with ADMIN_LOGIN_EMAIL in
+    // src/lib/adminSession.ts. There is no Admin SDK / custom-claims access
+    // available to this project, so this email check is the actual
+    // server-side gate; the client never compares the admin password
+    // itself, it only ever forwards it to Firebase Auth's own sign-in call.
+    function isAdmin() {
+      return request.auth != null && request.auth.token.email == 'admin@cfawaste.internal';
+    }
+
     // All app data lives here, scoped per account - a user can only ever
-    // read or write their own categories/items/tallies.
+    // read or write their own categories/items/tallies. The admin account
+    // additionally gets full access, so it can view/edit any store's data
+    // (used for the "view as" impersonation feature) without weakening
+    // what a regular account can access.
     match /users/{userId}/{document=**} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+      allow read, write: if request.auth != null && (request.auth.uid == userId || isAdmin());
     }
 
     // Deprecated top-level collections from before per-account scoping.
@@ -24,16 +37,19 @@ service cloud.firestore {
     // Maps a 5-digit store code to the email/uid it was registered with, so
     // login can work from just the code with no password. Reads are
     // unauthenticated (login happens before the client is signed in) but
-    // scoped to exact-code lookups only - list is denied so the whole
-    // directory can't be enumerated. Only the account that owns a code can
-    // create its mapping, and only once: Firestore classifies a write as
-    // "create" only when no document exists yet at that path, so a second
-    // attempt at an already-claimed code is naturally rejected.
+    // scoped to exact-code lookups only - list is denied to everyone except
+    // the admin, so the whole directory can't be enumerated by a regular
+    // account. Only the account that owns a code can create its own
+    // mapping (and only once - Firestore classifies a write as "create"
+    // only when no document exists yet at that path, so a second attempt at
+    // an already-claimed code is naturally rejected); the admin can also
+    // create/update/delete on any store's behalf, which is what powers
+    // resetting a store's code or its email on file.
     match /storeCodes/{code} {
       allow get: if true;
-      allow list: if false;
-      allow create: if request.auth != null && request.resource.data.uid == request.auth.uid;
-      allow update, delete: if false;
+      allow list: if isAdmin();
+      allow create: if request.auth != null && (request.resource.data.uid == request.auth.uid || isAdmin());
+      allow update, delete: if isAdmin();
     }
 
     // A published, publicly-readable snapshot of one account's categories

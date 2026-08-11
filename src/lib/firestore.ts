@@ -15,11 +15,16 @@ import {
   writeBatch,
 } from 'firebase/firestore';
 import { auth, db } from '../firebase';
+import { getImpersonatedUid } from './adminSession';
 import type { Category, Item, DailyTally } from '../types';
 
 // All app data lives under users/{uid}/... so each account's categories,
-// items, and tallies are fully isolated from every other account.
+// items, and tallies are fully isolated from every other account. When the
+// admin is viewing a store, every call here targets that store's uid
+// instead of the signed-in admin's own uid.
 function requireUid(): string {
+  const impersonated = getImpersonatedUid();
+  if (impersonated) return impersonated;
   const uid = auth.currentUser?.uid;
   if (!uid) throw new Error('Not authenticated');
   return uid;

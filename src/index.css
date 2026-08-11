@@ -336,6 +336,12 @@ body {
   border-left: 1px solid rgba(127, 127, 127, 0.3);
 }
 
+.back-link {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
 /* Tablet/PC only - phone already reads fine at the default sizes. Must come
    after the base .category-bar-cell/.category-chip/.category-chip-add
    rules above: equal-specificity CSS resolves ties by source order, so a
@@ -347,7 +353,8 @@ body {
   }
 
   .sign-out-link,
-  .info-link {
+  .info-link,
+  .back-link {
     font-size: 20px;
   }
 
@@ -374,7 +381,8 @@ body {
   }
 
   .sign-out-link,
-  .info-link {
+  .info-link,
+  .back-link {
     font-size: 24px;
   }
 
@@ -939,4 +947,124 @@ body {
   .auth-card {
     padding: 44px 36px;
   }
+}
+
+/* Admin screen: a plain centered column, capped so rows of buttons don't
+   stretch edge-to-edge on wide tablet-landscape/desktop viewports. Each
+   account is its own flex row that wraps onto a second line on narrow
+   phones instead of squeezing three buttons next to the code/email text. */
+.admin-content {
+  max-width: 720px;
+  width: 100%;
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+
+.admin-account-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px 16px;
+  padding: 14px 16px;
+  margin: 0 16px 10px;
+  background: var(--f7-page-bg-color, #fff);
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+}
+
+.admin-account-info {
+  min-width: 0;
+}
+
+.admin-account-code {
+  font-weight: 700;
+  font-size: 17px;
+  letter-spacing: 0.04em;
+}
+
+.admin-account-email {
+  font-size: 13px;
+  color: var(--f7-toolbar-link-color, #666);
+  margin-top: 2px;
+  overflow-wrap: anywhere;
+}
+
+.admin-account-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* Usage chart: a single-series sparkline (no legend needed - the header
+   names it), one hue matching the app's own accent, today's bar and the
+   currently-tapped bar picked out in the full-strength color so the
+   timeline's landmark and whatever the admin is inspecting both stand out
+   against the muted rest. Zero-activity days keep a small flat nub instead
+   of vanishing, so the day is still represented and the row stays a
+   continuous timeline rather than looking broken. */
+.usage-chart {
+  margin: 0 16px 10px;
+  padding: 12px 14px 10px;
+  background: var(--f7-page-bg-color, #fff);
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+}
+
+.usage-chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+  font-size: 12.5px;
+  color: var(--f7-toolbar-link-color, #666);
+  margin-bottom: 8px;
+}
+
+.usage-chart-header strong {
+  color: inherit;
+  font-weight: 700;
+}
+
+.usage-chart-tooltip {
+  color: var(--f7-theme-color, #007aff);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.usage-chart-svg {
+  display: block;
+  width: 100%;
+  height: 70px;
+}
+
+.usage-chart-bar {
+  fill: color-mix(in srgb, var(--f7-theme-color, #007aff) 30%, transparent);
+  cursor: pointer;
+  transition: fill 0.15s ease;
+}
+
+.usage-chart-bar-today {
+  fill: color-mix(in srgb, var(--f7-theme-color, #007aff) 65%, transparent);
+}
+
+.usage-chart-bar-active {
+  fill: var(--f7-theme-color, #007aff);
+}
+
+.usage-toggle-active {
+  --f7-button-outline-border-color: var(--f7-theme-color, #007aff);
+  --f7-button-outline-text-color: #fff;
+  background: var(--f7-theme-color, #007aff);
+}
+
+.usage-chart-loading,
+.usage-chart-error {
+  margin: 0 16px 10px;
+  padding: 16px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--f7-toolbar-link-color, #666);
+  background: var(--f7-page-bg-color, #fff);
+  border-radius: 12px;
 }

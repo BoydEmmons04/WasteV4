@@ -24,7 +24,15 @@ interface RadialState {
   center: { x: number; y: number };
 }
 
-export default function MainScreen() {
+interface MainScreenProps {
+  // Present only when the admin is viewing this store's grid from the admin
+  // panel. Swaps out Sign Out (which would end the admin's own session) for
+  // a Back link that just stops impersonating and returns to the account
+  // list - everything else about this screen behaves identically either way.
+  onExitImpersonation?: () => void;
+}
+
+export default function MainScreen({ onExitImpersonation }: MainScreenProps) {
   const [categories, setCategories] = useState<Category[]>([]);
   const [items, setItems] = useState<Item[]>([]);
   const [tallies, setTallies] = useState<DailyTally[]>([]);
@@ -121,9 +129,16 @@ export default function MainScreen() {
     <Page>
       <Navbar>
         <NavLeft>
-          <Link className="text-color-red sign-out-link" onClick={() => signOut(auth)}>
-            Sign Out
-          </Link>
+          {onExitImpersonation ? (
+            <Link className="back-link" onClick={onExitImpersonation}>
+              <Icon f7="chevron_left" />
+              Back
+            </Link>
+          ) : (
+            <Link className="text-color-red sign-out-link" onClick={() => signOut(auth)}>
+              Sign Out
+            </Link>
+          )}
         </NavLeft>
         <NavRight>
           <Link onClick={handleReorderToggle} className={reorderMode ? 'text-color-green' : undefined}>

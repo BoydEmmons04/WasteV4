@@ -3,6 +3,7 @@ import { Page, Preloader } from 'framework7-react';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../firebase';
 import { claimStoreCode, codeToAuthPassword, isStoreCodeTaken } from '../lib/storeAuth';
+import { RESERVED_ADMIN_CODE } from '../lib/adminSession';
 import TrashUpIcon from '../components/TrashUpIcon';
 
 interface RegisterPageProps {
@@ -29,6 +30,10 @@ export default function RegisterPage({ onSwitchToLogin, onRegistered }: Register
     }
     if (code !== confirmCode) {
       setError('Store codes do not match.');
+      return;
+    }
+    if (code === RESERVED_ADMIN_CODE) {
+      setError('That store code is reserved. Choose a different one.');
       return;
     }
     setLoading(true);

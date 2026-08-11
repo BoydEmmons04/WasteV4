@@ -3,6 +3,7 @@ import { Page, Preloader } from 'framework7-react';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../firebase';
 import { codeToAuthPassword, lookupEmailByStoreCode } from '../lib/storeAuth';
+import { ADMIN_LOGIN_EMAIL, RESERVED_ADMIN_CODE } from '../lib/adminSession';
 import TrashUpIcon from '../components/TrashUpIcon';
 
 interface LoginPageProps {
@@ -15,8 +16,11 @@ const digitsOnly = (value: string) => value.replace(/\D/g, '').slice(0, 5);
 
 export default function LoginPage({ onSwitchToRegister }: LoginPageProps) {
   const [code, setCode] = useState('');
+  const [adminPassword, setAdminPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  const isAdminCode = code === RESERVED_ADMIN_CODE;
 
   const handleLogin = async () => {
     setError('');
@@ -26,12 +30,18 @@ export default function LoginPage({ onSwitchToRegister }: LoginPageProps) {
     }
     setLoading(true);
     try {
-      const email = await lookupEmailByStoreCode(code);
-      if (!email) {
+      if (isAdminCode) {
+        // Firebase Auth itself validates the password server-side here -
+        // it's never compared against anything in this codebase.
+        await signInWithEmailAndPassword(auth, ADMIN_LOGIN_EMAIL, adminPassword);
+        return;
+      }
+      const result = await lookupEmailByStoreCode(code);
+      if (!result) {
         setError('Store code not found.');
         return;
       }
-      await signInWithEmailAndPassword(auth, email, codeToAuthPassword(code));
+      await signInWithEmailAndPassword(auth, result.email, codeToAuthPassword(result.passwordCode));
     } catch {
       setError('Could not log in with that store code.');
     } finally {
@@ -77,9 +87,27 @@ export default function LoginPage({ onSwitchToRegister }: LoginPageProps) {
               />
             </div>
 
+            {isAdminCode && (
+              <div className="auth-field">
+                <label htmlFor="login-admin-password">Admin Password</label>
+                <input
+                  id="login-admin-password"
+                  type="password"
+                  placeholder="Password"
+                  value={adminPassword}
+                  onChange={(e) => setAdminPassword(e.target.value)}
+                  autoComplete="current-password"
+                />
+              </div>
+            )}
+
             {error && <div className="auth-error">{error}</div>}
 
-            <button type="submit" className="auth-submit" disabled={loading || !CODE_PATTERN.test(code)}>
+            <button
+              type="submit"
+              className="auth-submit"
+              disabled={loading || !CODE_PATTERN.test(code) || (isAdminCode && !adminPassword)}
+            >
               {loading ? <Preloader color="white" /> : 'Log In'}
             </button>
           </form>
