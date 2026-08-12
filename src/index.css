@@ -164,16 +164,16 @@ body {
 
 .tally-button {
   position: relative;
-  display: block;
+  display: flex;
+  flex-direction: column;
   box-sizing: border-box;
   aspect-ratio: 1;
   width: 100%;
   padding: 0;
   background: var(--f7-page-bg-color, #fff);
   border: none;
-  border-bottom: 10px solid transparent;
-  border-radius: 12px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+  border-radius: 18px;
+  box-shadow: 0 0 8px 1px rgba(0, 0, 0, 0.18);
   overflow: hidden;
   font: inherit;
   color: inherit;
@@ -184,8 +184,64 @@ body {
   user-select: none;
 }
 
+/* The bevel has to be its own overlay layer rather than living in
+   .tally-button's own box-shadow above - the photo (.tally-button-image)
+   fills almost the entire card with its own background, which paints over
+   and hides an inset shadow declared on the button itself. This sits above
+   the photo (and the badge) instead: a light line along the top/left inner
+   edge, a darker one along the bottom/right, reading as light catching a
+   raised, rounded edge across the whole card, photo included. */
+.tally-button::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  border-radius: inherit;
+  pointer-events: none;
+  box-shadow:
+    inset 0 1.5px 0 rgba(255, 255, 255, 0.5),
+    inset 1.5px 0 0 rgba(255, 255, 255, 0.28),
+    inset 0 -1.5px 0 rgba(0, 0, 0, 0.2),
+    inset -1.5px 0 0 rgba(0, 0, 0, 0.13);
+}
+
 .tally-button:active {
   transform: scale(0.96);
+}
+
+/* Bottom accent bar - a real flex sibling of the photo (rather than a
+   border) so it can carry its own animated highlight layer. The item's
+   solid color is the base background-color; the gradient layered on top of
+   it is what sweeps to create the glossy "liquid glass" glint. */
+.tally-accent-bar {
+  flex: none;
+  height: 10px;
+  background-color: var(--tally-accent, transparent);
+  background-image: linear-gradient(100deg, transparent 40%, rgba(255, 255, 255, 0.4) 50%, transparent 60%);
+  background-size: 220% 100%;
+  background-repeat: no-repeat;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .tally-accent-bar,
+  .tally-badge {
+    /* Column-synced via animation-delay (see shimmerColumnDelay()) so the
+       sweep reads as one wave moving left to right across the grid rather
+       than independent glints - the long hold at the start/end of the
+       cycle is what makes the sweep itself read as an occasional glint
+       rather than continuous motion. */
+    animation: tally-shimmer 8s ease-in-out infinite;
+  }
+}
+
+@keyframes tally-shimmer {
+  0%,
+  80% {
+    background-position: 160% 0;
+  }
+  100% {
+    background-position: -60% 0;
+  }
 }
 
 .tally-badge {
@@ -205,12 +261,21 @@ body {
   color: #fff;
   font-size: 16px;
   font-weight: 700;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+  /* Same raised-edge bevel as the button (see .tally-button::after) so the
+     badge reads as a small glossy button rather than a flat dot. */
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.25),
+    inset 0 1.25px 0 rgba(255, 255, 255, 0.5),
+    inset 0 -1.25px 0 rgba(0, 0, 0, 0.2);
+  background-image: linear-gradient(100deg, transparent 40%, rgba(255, 255, 255, 0.4) 50%, transparent 60%);
+  background-size: 220% 100%;
+  background-repeat: no-repeat;
 }
 
 .tally-button-image {
-  position: absolute;
-  inset: 0;
+  position: relative;
+  flex: 1;
+  min-height: 0;
   z-index: 0;
   background: rgba(127, 127, 127, 0.12);
 }

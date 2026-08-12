@@ -1,7 +1,8 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { createPortal } from 'react-dom';
 import { useGridLayout } from '../hooks/useGridLayout';
 import { useFittedCellSize } from '../hooks/useFittedCellSize';
+import { shimmerColumnDelay } from '../lib/shimmer';
 import type { Item } from '../types';
 
 interface TallyGridReorderProps {
@@ -196,6 +197,7 @@ export default function TallyGridReorder({ items, tallyByItemId, onOrderChange }
                 const isDragging = dragInfo?.id === id;
                 const count = tallyByItemId[id] ?? 0;
                 const total = (typeof item.price === 'number' ? item.price : 0) * count;
+                const shimmerDelay = shimmerColumnDelay(localIndex % columns);
                 return (
                   <div
                     key={id}
@@ -212,13 +214,18 @@ export default function TallyGridReorder({ items, tallyByItemId, onOrderChange }
                           ? 'tally-button reorder-cell-lifted'
                           : `tally-button reorder-jiggle${localIndex % 2 ? ' reorder-jiggle-alt' : ''}`
                       }
-                      style={{ borderBottomColor: item.color }}
+                      style={{ '--tally-accent': item.color } as CSSProperties}
                     >
-                      {count > 0 && (
-                        <span className="tally-badge" style={{ backgroundColor: item.color }}>
-                          {count}
-                        </span>
-                      )}
+                      <span
+                        className="tally-badge"
+                        style={{
+                          backgroundColor: item.color,
+                          animationDelay: shimmerDelay,
+                          visibility: count > 0 ? 'visible' : 'hidden',
+                        }}
+                      >
+                        {count}
+                      </span>
                       <div className="tally-button-image">
                         {item.imageUrl ? <img src={item.imageUrl} alt="" /> : null}
                         <div className="tally-button-title">
@@ -226,6 +233,7 @@ export default function TallyGridReorder({ items, tallyByItemId, onOrderChange }
                           <div className="tally-button-price">${total.toFixed(2)}</div>
                         </div>
                       </div>
+                      <span className="tally-accent-bar" style={{ animationDelay: shimmerDelay }} />
                     </div>
                   </div>
                 );
@@ -251,8 +259,8 @@ export default function TallyGridReorder({ items, tallyByItemId, onOrderChange }
               height: dragInfo.rect.height,
               left: dragPoint.x - dragInfo.grabOffset.x,
               top: dragPoint.y - dragInfo.grabOffset.y,
-              borderBottomColor: draggedItem.color,
-            }}
+              '--tally-accent': draggedItem.color,
+            } as CSSProperties}
           >
             {draggedCount > 0 && (
               <span className="tally-badge" style={{ backgroundColor: draggedItem.color }}>
@@ -268,6 +276,7 @@ export default function TallyGridReorder({ items, tallyByItemId, onOrderChange }
                 </div>
               </div>
             </div>
+            <span className="tally-accent-bar" />
           </div>,
           document.body,
         )}

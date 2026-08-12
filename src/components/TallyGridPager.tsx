@@ -67,11 +67,12 @@ export default function TallyGridPager({ items, tallyByItemId, onTap, onLongPres
         {pages.map((pageItems, i) => (
           <div className="tally-pager-page" key={i}>
             <div className="tally-grid" style={gridStyle}>
-              {pageItems.map((item) => (
+              {pageItems.map((item, index) => (
                 <TallyButton
                   key={item.id}
                   item={item}
                   count={tallyByItemId[item.id] ?? 0}
+                  columnIndex={index % columns}
                   onTap={() => onTap(item)}
                   onLongPress={(center) => onLongPress(item, center)}
                   onSwipeDown={() => onSwipeDown(item)}

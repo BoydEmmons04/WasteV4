@@ -3,6 +3,8 @@ import { App, View, Page, Block, Preloader } from 'framework7-react';
 import { onAuthStateChanged, type User } from 'firebase/auth';
 import { auth } from './firebase';
 import { ADMIN_LOGIN_EMAIL, setImpersonatedUid } from './lib/adminSession';
+import { setupReconnectGuard } from './lib/reconnectGuard';
+import { getStoredDarkMode } from './lib/theme';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import TemplatePickerPage from './pages/TemplatePickerPage';
@@ -12,7 +14,7 @@ import AdminScreen from './pages/AdminScreen';
 const f7params = {
   name: 'CFA Waste',
   theme: 'ios' as const,
-  darkMode: 'auto' as const,
+  darkMode: getStoredDarkMode(),
   navbar: {
     iosCenterTitle: false,
   },
@@ -35,6 +37,10 @@ export default function MyApp() {
       }
     });
     return unsubscribe;
+  }, []);
+
+  useEffect(() => {
+    setupReconnectGuard();
   }, []);
 
   // There's no server-side admin role available to this project (no

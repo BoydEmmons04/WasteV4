@@ -13,6 +13,7 @@ import {
 } from '../lib/firestore';
 import { handleFirestoreError } from '../lib/sessionGuard';
 import { useTodayDateString } from '../hooks/useTodayDateString';
+import { useDarkMode } from '../hooks/useDarkMode';
 import type { Category, Item, DailyTally } from '../types';
 import CategoryBar from '../components/CategoryBar';
 import TallyGridPager from '../components/TallyGridPager';
@@ -48,6 +49,7 @@ export default function MainScreen({ onExitImpersonation }: MainScreenProps) {
   const pendingOrderRef = useRef<string[]>([]);
   const today = useTodayDateString();
   const [storeCode, setStoreCode] = useState<string | null>(null);
+  const { isDark, toggle: toggleDarkMode } = useDarkMode();
 
   useEffect(() => {
     const unsubCategories = subscribeCategories(setCategories);
@@ -169,6 +171,9 @@ export default function MainScreen({ onExitImpersonation }: MainScreenProps) {
               </Link>
             </>
           )}
+          <Link onClick={toggleDarkMode} className="theme-toggle-link">
+            <Icon f7={isDark ? 'sun_max_fill' : 'moon_fill'} />
+          </Link>
           <Link onClick={handleGestureHelp} className="info-link">
             <Icon f7="info_circle" />
           </Link>
