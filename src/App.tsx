@@ -12,6 +12,7 @@ import AdminScreen from './pages/AdminScreen';
 const f7params = {
   name: 'CFA Waste',
   theme: 'ios' as const,
+  darkMode: 'auto' as const,
   navbar: {
     iosCenterTitle: false,
   },

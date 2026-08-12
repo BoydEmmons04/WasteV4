@@ -139,13 +139,13 @@ body {
   height: 40px;
   border: none;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.9);
+  background: color-mix(in srgb, var(--f7-page-bg-color, #fff) 92%, transparent);
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 20px;
-  color: #111;
+  color: var(--f7-text-color, #111);
   cursor: pointer;
 }
 
@@ -463,8 +463,8 @@ body {
 .radial-center {
   position: fixed;
   transform: translate(-50%, -50%);
-  background: rgba(255, 255, 255, 0.95);
-  color: #111;
+  background: color-mix(in srgb, var(--f7-page-bg-color, #fff) 96%, transparent);
+  color: var(--f7-text-color, #111);
   padding: 10px 16px;
   border-radius: 999px;
   font-weight: 700;
@@ -622,6 +622,13 @@ body {
   margin-top: 8px;
 }
 
+.summary-export-row {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  margin-top: -6px;
+}
+
 .summary-category-row {
   margin: 0 16px 8px;
 }
@@ -688,6 +695,17 @@ body {
   font-size: 13px;
   color: var(--f7-toolbar-link-color, #666);
   margin-top: 2px;
+}
+
+.restore-item-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.restore-item-row .summary-item-thumb {
+  flex: none;
 }
 
 /* On wide screens the fullscreen popups would otherwise stretch their
@@ -1085,6 +1103,25 @@ body {
   --f7-button-outline-border-color: var(--f7-theme-color, #007aff);
   --f7-button-outline-text-color: #fff;
   background: var(--f7-theme-color, #007aff);
+}
+
+.item-trend-block {
+  padding-top: 4px;
+}
+
+.item-trend-block .item-trend-chart {
+  margin: 0 0 10px;
+}
+
+.item-trend-empty {
+  font-size: 13px;
+  color: var(--f7-toolbar-link-color, #666);
+  text-align: center;
+  padding: 8px 0;
+}
+
+.item-trend-log {
+  margin: 0;
 }
 
 .usage-chart-loading,

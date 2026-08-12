@@ -56,6 +56,15 @@ service cloud.firestore {
       allow update, delete: if isAdmin();
     }
 
+    // Append-only log of admin actions (reset code, edit email, delete
+    // store, view/impersonate), visible only in the admin panel. No client
+    // can update or delete an entry once written, including the admin
+    // account itself, so the log can't be quietly edited after the fact.
+    match /auditLogs/{logId} {
+      allow read, create: if isAdmin();
+      allow update, delete: if false;
+    }
+
     // A published, publicly-readable snapshot of one account's categories
     // and items, copyable by other accounts at registration so they don't
     // have to start empty. Only the owning account can publish/overwrite

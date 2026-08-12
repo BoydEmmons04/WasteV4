@@ -15,6 +15,8 @@
     "framework7": "^9.1.2",
     "framework7-icons": "^5.0.5",
     "framework7-react": "^9.1.2",
+    "jspdf": "^4.2.1",
+    "jspdf-autotable": "^5.0.8",
     "react": "^19.2.8",
     "react-dom": "^19.2.8"
   },

@@ -16,6 +16,7 @@ import {
 } from 'firebase/firestore';
 import { auth, db } from '../firebase';
 import { getImpersonatedUid } from './adminSession';
+import { handleFirestoreError } from './sessionGuard';
 import type { Category, Item, DailyTally } from '../types';
 
 // All app data lives under users/{uid}/... so each account's categories,
@@ -71,24 +72,50 @@ export function dateStringDaysAgo(days: number): string {
   return toDateString(d);
 }
 
+// Every date string from start to end inclusive, so a per-day series can be
+// zero-filled and read as a continuous timeline instead of only showing the
+// days that happened to have activity.
+export function enumerateDateRange(start: string, end: string): string[] {
+  const dates: string[] = [];
+  const cursor = new Date(`${start}T00:00:00`);
+  const endDate = new Date(`${end}T00:00:00`);
+  while (cursor <= endDate) {
+    dates.push(toDateString(cursor));
+    cursor.setDate(cursor.getDate() + 1);
+  }
+  return dates;
+}
+
 export function subscribeCategories(callback: (categories: Category[]) => void) {
   const q = query(categoriesCollection(), orderBy('order', 'asc'));
-  return onSnapshot(q, (snapshot) => {
-    callback(snapshot.docs.map((d) => ({ id: d.id, ...d.data() }) as Category));
-  });
+  return onSnapshot(
+    q,
+    (snapshot) => {
+      callback(snapshot.docs.map((d) => ({ id: d.id, ...d.data() }) as Category));
+    },
+    handleFirestoreError,
+  );
 }
 
 export function subscribeItems(callback: (items: Item[]) => void) {
-  return onSnapshot(itemsCollection(), (snapshot) => {
-    callback(snapshot.docs.map((d) => ({ id: d.id, ...d.data() }) as Item));
-  });
+  return onSnapshot(
+    itemsCollection(),
+    (snapshot) => {
+      callback(snapshot.docs.map((d) => ({ id: d.id, ...d.data() }) as Item));
+    },
+    handleFirestoreError,
+  );
 }
 
 export function subscribeTalliesForDate(date: string, callback: (tallies: DailyTally[]) => void) {
   const q = query(talliesCollection(), where('date', '==', date));
-  return onSnapshot(q, (snapshot) => {
-    callback(snapshot.docs.map((d) => ({ id: d.id, ...d.data() }) as DailyTally));
-  });
+  return onSnapshot(
+    q,
+    (snapshot) => {
+      callback(snapshot.docs.map((d) => ({ id: d.id, ...d.data() }) as DailyTally));
+    },
+    handleFirestoreError,
+  );
 }
 
 export async function fetchTalliesInRange(startDate: string, endDate: string): Promise<DailyTally[]> {
@@ -128,7 +155,7 @@ export interface ItemFormData {
 }
 
 export async function addItem(data: ItemFormData, order: number) {
-  await addDoc(itemsCollection(), { ...data, order, active: true });
+  await addDoc(itemsCollection(), { ...data, order, active: true, createdAt: serverTimestamp() });
 }
 
 // Edits are never applied in place: the old item doc is archived (kept, but
@@ -138,13 +165,21 @@ export async function addItem(data: ItemFormData, order: number) {
 // doc keeps the old item's grid position rather than jumping to the end.
 export async function editItem(oldItem: Item, data: ItemFormData) {
   await updateDoc(itemDocRef(oldItem.id), { active: false });
-  await addDoc(itemsCollection(), { ...data, order: oldItem.order, active: true });
+  await addDoc(itemsCollection(), { ...data, order: oldItem.order, active: true, createdAt: serverTimestamp() });
 }
 
 // Soft-delete: archives the item instead of removing the Firestore doc, so
 // past tallies against it keep resolving correctly in summary reports.
 export async function archiveItem(itemId: string) {
   await updateDoc(itemDocRef(itemId), { active: false });
+}
+
+// Reactivates an archived item's original doc (rather than creating a new
+// one) so historical tallies - which reference it by doc id - stay linked
+// to the item that's reappearing. createdAt is bumped so a restored item
+// reads as newly active rather than keeping its original creation date.
+export async function restoreItem(itemId: string, order: number) {
+  await updateDoc(itemDocRef(itemId), { active: true, order, createdAt: serverTimestamp() });
 }
 
 // Persists a new left-to-right, top-to-bottom order for a set of items

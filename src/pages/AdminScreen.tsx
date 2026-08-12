@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Page, Navbar, NavRight, Link, Block, BlockTitle, Button, Preloader, f7 } from 'framework7-react';
+import { Page, Navbar, NavRight, Link, Icon, Block, BlockTitle, Button, Preloader, f7 } from 'framework7-react';
 import { signOut } from 'firebase/auth';
 import { auth } from '../firebase';
 import {
@@ -11,8 +11,11 @@ import {
   type AdminAccount,
   type DailyUsagePoint,
 } from '../lib/admin';
+import { logAdminAction } from '../lib/auditLog';
 import { RESERVED_ADMIN_CODE } from '../lib/adminSession';
+import { handleFirestoreError } from '../lib/sessionGuard';
 import UsageChart from '../components/UsageChart';
+import AuditLogScreen from './AuditLogScreen';
 
 interface AdminScreenProps {
   onViewAccount: (uid: string) => void;
@@ -30,13 +33,17 @@ export default function AdminScreen({ onViewAccount }: AdminScreenProps) {
   const [usageByUid, setUsageByUid] = useState<Record<string, DailyUsagePoint[]>>({});
   const [usageLoadingUid, setUsageLoadingUid] = useState<string | null>(null);
   const [usageErrorUid, setUsageErrorUid] = useState<string | null>(null);
+  const [auditLogOpen, setAuditLogOpen] = useState(false);
 
   const load = () => {
     setLoading(true);
     setError('');
     listAccounts()
       .then(setAccounts)
-      .catch(() => setError('Could not load accounts.'))
+      .catch((err) => {
+        handleFirestoreError(err);
+        setError('Could not load accounts.');
+      })
       .finally(() => setLoading(false));
   };
 
@@ -131,6 +138,9 @@ export default function AdminScreen({ onViewAccount }: AdminScreenProps) {
     <Page>
       <Navbar title="Admin">
         <NavRight>
+          <Link onClick={() => setAuditLogOpen(true)}>
+            <Icon f7="doc_text" />
+          </Link>
           <Link className="text-color-red sign-out-link" onClick={() => signOut(auth)}>
             Sign Out
           </Link>
@@ -180,7 +190,16 @@ export default function AdminScreen({ onViewAccount }: AdminScreenProps) {
                     <Button small outline round disabled={busyCode === account.code} onClick={() => handleChangeEmail(account)}>
                       Edit Email
                     </Button>
-                    <Button small fill round disabled={busyCode === account.code} onClick={() => onViewAccount(account.uid)}>
+                    <Button
+                      small
+                      fill
+                      round
+                      disabled={busyCode === account.code}
+                      onClick={() => {
+                        logAdminAction('View Store', `Viewed store ${account.code}`, account.code);
+                        onViewAccount(account.uid);
+                      }}
+                    >
                       {busyCode === account.code ? <Preloader color="white" /> : 'View'}
                     </Button>
                     <Button
@@ -213,6 +232,8 @@ export default function AdminScreen({ onViewAccount }: AdminScreenProps) {
           </Block>
         )}
       </div>
+
+      <AuditLogScreen opened={auditLogOpen} onClose={() => setAuditLogOpen(false)} />
     </Page>
   );
 }

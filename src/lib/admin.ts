@@ -14,6 +14,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '../firebase';
 import { dateStringDaysAgo } from './firestore';
+import { logAdminAction } from './auditLog';
 
 export interface DailyUsagePoint {
   date: string;
@@ -69,6 +70,7 @@ export async function resetStoreCode(oldCode: string, newCode: string): Promise<
   if (typeof data.contactEmail === 'string') newDoc.contactEmail = data.contactEmail;
   await setDoc(newRef, newDoc);
   await deleteDoc(oldRef);
+  await logAdminAction('Reset Code', `${oldCode} -> ${newCode}`, newCode);
 }
 
 // Updates only the contact email on file for a store code - shown in the
@@ -80,6 +82,7 @@ export async function resetStoreCode(oldCode: string, newCode: string): Promise<
 // real record never moves with it.
 export async function changeAccountEmailOnFile(code: string, newContactEmail: string): Promise<void> {
   await updateDoc(doc(db, 'storeCodes', code), { contactEmail: newContactEmail });
+  await logAdminAction('Edit Email', `Set contact email to ${newContactEmail}`, code);
 }
 
 // One store's total items tallied per day over the last `days` days
@@ -135,4 +138,5 @@ export async function deleteAccount(code: string, uid: string): Promise<void> {
   await deleteAllDocs(collection(db, 'users', uid, 'items'));
   await deleteAllDocs(collection(db, 'users', uid, 'tallies'));
   await deleteDoc(doc(db, 'storeCodes', code));
+  await logAdminAction('Delete Store', `Erased store ${code} (uid ${uid})`, code);
 }

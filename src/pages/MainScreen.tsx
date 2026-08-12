@@ -11,6 +11,7 @@ import {
   archiveItem,
   reorderItems,
 } from '../lib/firestore';
+import { handleFirestoreError } from '../lib/sessionGuard';
 import { useTodayDateString } from '../hooks/useTodayDateString';
 import type { Category, Item, DailyTally } from '../types';
 import CategoryBar from '../components/CategoryBar';
@@ -63,7 +64,10 @@ export default function MainScreen({ onExitImpersonation }: MainScreenProps) {
   useEffect(() => {
     fetchOwnStoreCode()
       .then(setStoreCode)
-      .catch(() => setStoreCode(null));
+      .catch((err) => {
+        handleFirestoreError(err);
+        setStoreCode(null);
+      });
   }, []);
 
   // Re-subscribes whenever the calendar day rolls over (see
@@ -244,6 +248,7 @@ export default function MainScreen({ onExitImpersonation }: MainScreenProps) {
         categories={categories}
         items={items}
         todaysTallies={tallies}
+        storeCode={storeCode}
       />
     </Page>
   );

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Popup, Page, Navbar, NavRight, Link, List, ListInput, Block, BlockTitle, Button, Preloader } from 'framework7-react';
 import { compressImageToDataUrl } from '../lib/image';
 import { addItem, editItem } from '../lib/firestore';
+import RestoreItemsPopup from './RestoreItemsPopup';
 import type { Category, Item } from '../types';
 
 const COLORS = [
@@ -36,8 +37,10 @@ export default function ItemFormSheet({ opened, onClose, categories, items, defa
   const [compressing, setCompressing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [restoreOpen, setRestoreOpen] = useState(false);
 
   const isEditing = !!editingItem;
+  const hasArchivedItems = items.some((i) => i.active === false);
 
   useEffect(() => {
     if (!opened) return;
@@ -126,6 +129,14 @@ export default function ItemFormSheet({ opened, onClose, categories, items, defa
           </NavRight>
         </Navbar>
 
+        {!isEditing && hasArchivedItems && (
+          <Block className="text-align-center">
+            <Button outline round onClick={() => setRestoreOpen(true)}>
+              Restore an Archived Item
+            </Button>
+          </Block>
+        )}
+
         <Block className="text-align-center">
           <input ref={fileInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleFileChange} />
           <div className="add-item-image-picker" onClick={() => fileInputRef.current?.click()}>
@@ -193,6 +204,19 @@ export default function ItemFormSheet({ opened, onClose, categories, items, defa
           </Button>
         </Block>
       </Page>
+
+      {!isEditing && (
+        <RestoreItemsPopup
+          opened={restoreOpen}
+          onClose={() => setRestoreOpen(false)}
+          items={items}
+          categories={categories}
+          onRestored={() => {
+            setRestoreOpen(false);
+            requestAnimationFrame(() => onClose());
+          }}
+        />
+      )}
     </Popup>
   );
 }
