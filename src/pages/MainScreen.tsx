@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Page, Navbar, NavLeft, NavRight, Link, Icon, Toolbar, Block, f7 } from 'framework7-react';
+import { Page, Navbar, NavLeft, NavRight, Link, Icon, Toolbar, Block, Button, f7 } from 'framework7-react';
 import { signOut } from 'firebase/auth';
 import { auth } from '../firebase';
 import {
@@ -50,15 +50,50 @@ export default function MainScreen({ onExitImpersonation }: MainScreenProps) {
   const today = useTodayDateString();
   const [storeCode, setStoreCode] = useState<string | null>(null);
   const { isDark, toggle: toggleDarkMode } = useDarkMode();
+  const [gridLoadError, setGridLoadError] = useState<string | null>(null);
+  const [retryKey, setRetryKey] = useState(0);
 
+  // Categories/items load over a live onSnapshot listener rather than a
+  // one-shot fetch, so there's no promise to await or retry directly. Two
+  // distinct failure modes need covering: an outright error (any code, not
+  // just a stale session - see subscribeCategories/subscribeItems), and a
+  // listener that never errors but also never delivers a first snapshot
+  // (a stalled connection, most likely right after a cold-start refresh).
+  // Either one used to leave the grid silently empty forever; both now
+  // surface the same retry UI instead. retryKey lets "Try Again" force a
+  // fresh subscription rather than just retrying against dead listeners.
   useEffect(() => {
-    const unsubCategories = subscribeCategories(setCategories);
-    const unsubItems = subscribeItems(setItems);
+    setGridLoadError(null);
+    let gotCategories = false;
+    let gotItems = false;
+
+    const stallTimeout = setTimeout(() => {
+      if (!gotCategories || !gotItems) {
+        setGridLoadError('Taking longer than expected to load your items. Check your connection and try again.');
+      }
+    }, 15000);
+
+    const handleLoadError = () => {
+      setGridLoadError('Could not load your items. Check your connection and try again.');
+    };
+
+    const unsubCategories = subscribeCategories((cats) => {
+      gotCategories = true;
+      setGridLoadError(null);
+      setCategories(cats);
+    }, handleLoadError);
+    const unsubItems = subscribeItems((its) => {
+      gotItems = true;
+      setGridLoadError(null);
+      setItems(its);
+    }, handleLoadError);
+
     return () => {
+      clearTimeout(stallTimeout);
       unsubCategories();
       unsubItems();
     };
-  }, []);
+  }, [retryKey]);
 
   // One-time lookup, not a live subscription - a store's own code practically
   // never changes on its own (only an admin reset moves it), so this doesn't
@@ -188,7 +223,14 @@ export default function MainScreen({ onExitImpersonation }: MainScreenProps) {
         )}
 
         <div className="main-grid-area">
-          {categories.length === 0 ? (
+          {gridLoadError ? (
+            <Block className="text-align-center">
+              <p style={{ color: 'var(--f7-color-red)' }}>{gridLoadError}</p>
+              <Button small outline round onClick={() => setRetryKey((k) => k + 1)}>
+                Try Again
+              </Button>
+            </Block>
+          ) : categories.length === 0 ? (
             <Block className="text-align-center">
               <p>No categories yet.</p>
             </Block>

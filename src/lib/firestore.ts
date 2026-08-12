@@ -86,24 +86,39 @@ export function enumerateDateRange(start: string, end: string): string[] {
   return dates;
 }
 
-export function subscribeCategories(callback: (categories: Category[]) => void) {
+// onSnapshot's error callback fires for more than just a stale session
+// (permission-denied/unauthenticated, handled by handleFirestoreError) -
+// once it fires for ANY reason the listener is done for good, it will never
+// call back again. handleFirestoreError alone silently drops every other
+// error code, which is exactly how "items sometimes don't load on refresh"
+// goes unexplained: a transient error the SDK can't recover from on its own
+// (e.g. right after a cold-start reconnect) kills the listener with nothing
+// shown. The optional onError here lets a caller (MainScreen) surface its
+// own retry UI regardless of the specific error code.
+export function subscribeCategories(callback: (categories: Category[]) => void, onError?: (error: unknown) => void) {
   const q = query(categoriesCollection(), orderBy('order', 'asc'));
   return onSnapshot(
     q,
     (snapshot) => {
       callback(snapshot.docs.map((d) => ({ id: d.id, ...d.data() }) as Category));
     },
-    handleFirestoreError,
+    (error) => {
+      handleFirestoreError(error);
+      onError?.(error);
+    },
   );
 }
 
-export function subscribeItems(callback: (items: Item[]) => void) {
+export function subscribeItems(callback: (items: Item[]) => void, onError?: (error: unknown) => void) {
   return onSnapshot(
     itemsCollection(),
     (snapshot) => {
       callback(snapshot.docs.map((d) => ({ id: d.id, ...d.data() }) as Item));
     },
-    handleFirestoreError,
+    (error) => {
+      handleFirestoreError(error);
+      onError?.(error);
+    },
   );
 }
 
