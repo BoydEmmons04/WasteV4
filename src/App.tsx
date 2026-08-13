@@ -4,6 +4,7 @@ import { onAuthStateChanged, type User } from 'firebase/auth';
 import { auth } from './firebase';
 import { ADMIN_LOGIN_EMAIL, setImpersonatedUid } from './lib/adminSession';
 import { setupReconnectGuard } from './lib/reconnectGuard';
+import { scheduleMidnightRefresh } from './lib/midnightRefresh';
 import { getStoredDarkMode } from './lib/theme';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
@@ -41,6 +42,7 @@ export default function MyApp() {
 
   useEffect(() => {
     setupReconnectGuard();
+    scheduleMidnightRefresh();
   }, []);
 
   // There's no server-side admin role available to this project (no
