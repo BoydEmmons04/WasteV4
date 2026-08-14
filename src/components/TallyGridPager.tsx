@@ -18,8 +18,20 @@ export default function TallyGridPager({ items, tallyByItemId, onTap, onLongPres
   const scrollRef = useRef<HTMLDivElement>(null);
   const [pageIndex, setPageIndex] = useState(0);
   const cellSize = useFittedCellSize(scrollRef, columns, rows);
+  // gridTemplateRows has to be set explicitly here, not left to
+  // grid-auto-rows - the CSS's own grid-template-rows: repeat(4, 1fr) (see
+  // .tally-grid) is a fixed 4 *explicit* tracks, and grid-auto-rows only
+  // ever sizes *implicit* tracks created beyond an explicit template, so it
+  // was never actually overriding row height at all. Every row silently
+  // stayed an equal 1fr slice of the full container height regardless of
+  // cellSize - fine by coincidence everywhere rows happens to equal 4 (every
+  // layout except landscape tablet), but landscape tablet's rows=3 left a
+  // phantom fourth row of dead space at the bottom, and even where the row
+  // *count* matched, row *height* was still never actually pixel-locked to
+  // cellSize the way column width was, so buttons were never reliably
+  // square.
   const gridStyle = cellSize
-    ? { gridTemplateColumns: `repeat(${columns}, ${cellSize}px)`, gridAutoRows: `${cellSize}px` }
+    ? { gridTemplateColumns: `repeat(${columns}, ${cellSize}px)`, gridTemplateRows: `repeat(${rows}, ${cellSize}px)` }
     : undefined;
 
   const pages = useMemo(() => {

@@ -1,3 +1,5 @@
+import { hardReload } from './hardReload';
+
 // A kiosk-style tablet stays on one open tab for days at a time. Even with
 // this app's own defensive measures (session-expiry handling in
 // sessionGuard.ts, reconnect-on-wake in reconnectGuard.ts, the grid's own
@@ -22,7 +24,7 @@ export function scheduleMidnightRefresh(): void {
   const reload = () => {
     if (fired) return;
     fired = true;
-    window.location.reload();
+    hardReload();
   };
 
   window.setTimeout(reload, target - Date.now());

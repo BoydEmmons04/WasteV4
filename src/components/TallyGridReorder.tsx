@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useGridLayout } from '../hooks/useGridLayout';
 import { useFittedCellSize } from '../hooks/useFittedCellSize';
@@ -48,8 +48,11 @@ export default function TallyGridReorder({ items, tallyByItemId, onOrderChange }
 
   const pagesScrollRef = useRef<HTMLDivElement>(null);
   const cellSize = useFittedCellSize(pagesScrollRef, columns, rows);
+  // See the matching comment in TallyGridPager.tsx - gridTemplateRows has
+  // to be set explicitly (not left to grid-auto-rows) to actually override
+  // .tally-grid's own fixed grid-template-rows: repeat(4, 1fr).
   const gridStyle = cellSize
-    ? { gridTemplateColumns: `repeat(${columns}, ${cellSize}px)`, gridAutoRows: `${cellSize}px` }
+    ? { gridTemplateColumns: `repeat(${columns}, ${cellSize}px)`, gridTemplateRows: `repeat(${rows}, ${cellSize}px)` }
     : undefined;
 
   const cellRefs = useRef<Map<string, HTMLDivElement>>(new Map());
@@ -214,7 +217,6 @@ export default function TallyGridReorder({ items, tallyByItemId, onOrderChange }
                           ? 'tally-button reorder-cell-lifted'
                           : `tally-button reorder-jiggle${localIndex % 2 ? ' reorder-jiggle-alt' : ''}`
                       }
-                      style={{ '--tally-accent': item.color } as CSSProperties}
                     >
                       <span
                         className="tally-badge"
@@ -233,7 +235,10 @@ export default function TallyGridReorder({ items, tallyByItemId, onOrderChange }
                           <div className="tally-button-price">${total.toFixed(2)}</div>
                         </div>
                       </div>
-                      <span className="tally-accent-bar" style={{ animationDelay: shimmerDelay }} />
+                      <span
+                        className="tally-accent-bar"
+                        style={{ backgroundColor: item.color, animationDelay: shimmerDelay }}
+                      />
                     </div>
                   </div>
                 );
@@ -259,8 +264,7 @@ export default function TallyGridReorder({ items, tallyByItemId, onOrderChange }
               height: dragInfo.rect.height,
               left: dragPoint.x - dragInfo.grabOffset.x,
               top: dragPoint.y - dragInfo.grabOffset.y,
-              '--tally-accent': draggedItem.color,
-            } as CSSProperties}
+            }}
           >
             {draggedCount > 0 && (
               <span className="tally-badge" style={{ backgroundColor: draggedItem.color }}>
@@ -276,7 +280,7 @@ export default function TallyGridReorder({ items, tallyByItemId, onOrderChange }
                 </div>
               </div>
             </div>
-            <span className="tally-accent-bar" />
+            <span className="tally-accent-bar" style={{ backgroundColor: draggedItem.color }} />
           </div>,
           document.body,
         )}

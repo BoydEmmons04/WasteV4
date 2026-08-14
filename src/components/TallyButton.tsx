@@ -1,4 +1,3 @@
-import type { CSSProperties } from 'react';
 import { useItemGesture } from '../hooks/useItemGesture';
 import { shimmerColumnDelay } from '../lib/shimmer';
 import type { Item } from '../types';
@@ -18,7 +17,7 @@ export default function TallyButton({ item, count, columnIndex, onTap, onLongPre
   const shimmerDelay = shimmerColumnDelay(columnIndex);
 
   return (
-    <button type="button" className="tally-button" style={{ '--tally-accent': item.color } as CSSProperties} {...gesture}>
+    <button type="button" className="tally-button" {...gesture}>
       {/* Always mounted (visibility toggled, not conditionally rendered) so
           its shimmer animation clock keeps running in the background while
           hidden at count 0 - a conditionally-mounted badge would otherwise
@@ -39,7 +38,7 @@ export default function TallyButton({ item, count, columnIndex, onTap, onLongPre
           <div className="tally-button-price">${total.toFixed(2)}</div>
         </div>
       </div>
-      <span className="tally-accent-bar" style={{ animationDelay: shimmerDelay }} />
+      <span className="tally-accent-bar" style={{ backgroundColor: item.color, animationDelay: shimmerDelay }} />
     </button>
   );
 }

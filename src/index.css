@@ -2,6 +2,26 @@
   color-scheme: light dark;
 }
 
+/* Framework7's default dark theme uses pure black (#000) for the page
+   background and a near-black translucent navbar - noticeably harsher than
+   the dark greys most iOS apps actually use (F7 itself already uses a
+   grey, #1c1c1d, for its own "block strong" cards, just not for the page).
+   Nudging the page to that same family of grey instead of black, since
+   almost every custom card in this app (tally buttons, category chips,
+   admin rows, etc.) already colors itself off --f7-page-bg-color the same
+   way it does in light mode - matches F7's own selector exactly so it
+   overrides cleanly (this file loads after framework7's bundle CSS). */
+.ios.dark,
+.ios .dark {
+  --f7-page-bg-color: #1c1c1e;
+  --f7-bars-bg-color: rgba(28, 28, 30, 0.8);
+}
+
+body.dark,
+.dark body {
+  background: #1c1c1e;
+}
+
 html,
 body,
 #root {
@@ -62,8 +82,8 @@ body {
 @media (min-width: 700px) {
   .tally-grid {
     grid-template-columns: repeat(3, 1fr);
-    gap: 60px;
-    padding: 60px;
+    gap: 28px;
+    padding: 28px;
   }
 }
 
@@ -169,6 +189,17 @@ body {
   box-sizing: border-box;
   aspect-ratio: 1;
   width: 100%;
+  /* Guards the brief window before useFittedCellSize's first measurement
+     lands (its ResizeObserver's initial callback isn't synchronous, and a
+     zero-size measurement on a not-yet-settled layout is skipped and
+     retried) - until then the grid falls back to plain 1fr rows with no
+     explicit pixel height, and aspect-ratio:1 sizing off the (often wider)
+     column width can ask for a box taller than that 1fr row track actually
+     has, spilling into the row below. Clamping to the row's own height
+     here means that brief pre-fit state is momentarily non-square instead
+     of overlapping the next row - it self-corrects to a perfect square the
+     instant the real cell size is measured. */
+  max-height: 100%;
   padding: 0;
   background: var(--f7-page-bg-color, #fff);
   border: none;
@@ -211,12 +242,16 @@ body {
 
 /* Bottom accent bar - a real flex sibling of the photo (rather than a
    border) so it can carry its own animated highlight layer. The item's
-   solid color is the base background-color; the gradient layered on top of
-   it is what sweeps to create the glossy "liquid glass" glint. */
+   solid color is set directly via inline style (backgroundColor), not a
+   CSS custom property - some older WebKit/Safari versions fail to resolve
+   var() at all, which silently drops the whole background-color
+   declaration and left this bar colorless on at least one real device
+   while every other color on the page (which use plain inline styles, same
+   as this now does) rendered fine. The gradient layered on top of the
+   solid color is what sweeps to create the glossy "liquid glass" glint. */
 .tally-accent-bar {
   flex: none;
   height: 10px;
-  background-color: var(--tally-accent, transparent);
   background-image: linear-gradient(100deg, transparent 40%, rgba(255, 255, 255, 0.4) 50%, transparent 60%);
   background-size: 220% 100%;
   background-repeat: no-repeat;

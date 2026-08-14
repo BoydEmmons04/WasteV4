@@ -1,4 +1,5 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react';
+import { hardReload } from '../lib/hardReload';
 
 interface ErrorBoundaryProps {
   children: ReactNode;
@@ -63,7 +64,7 @@ export default class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBo
           <p style={{ opacity: 0.7, fontSize: 14 }}>{this.state.error.message}</p>
           <button
             type="button"
-            onClick={() => window.location.reload()}
+            onClick={() => hardReload()}
             style={{
               padding: '10px 20px',
               borderRadius: 10,

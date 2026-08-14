@@ -4,7 +4,7 @@ import type { RefObject } from 'react';
 // Must match the .tally-grid gap/padding in index.css (including its
 // 700px breakpoint) - single source of truth for the pixel math below.
 function getGridSpacing(): number {
-  return window.innerWidth >= 700 ? 60 : 16;
+  return window.innerWidth >= 700 ? 28 : 16;
 }
 
 // Measures the actual space available for one page of the grid and works
